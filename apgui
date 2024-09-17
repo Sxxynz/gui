@@ -1,0 +1,159 @@
+local guiScript = [[
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local ToggleButton = Instance.new("TextButton")
+local StatusLabel = Instance.new("TextLabel")
+local KeybindButton = Instance.new("TextButton")
+local UICorner = Instance.new("UICorner")
+local UIStroke = Instance.new("UIStroke")
+local TitleLabel = Instance.new("TextLabel")
+local UserInputService = game:GetService("UserInputService")
+
+ScreenGui.Name = "AutoparryGUI"
+ScreenGui.Parent = game.CoreGui
+
+Frame.Name = "MainFrame"
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -70)
+Frame.Size = UDim2.new(0, 240, 0, 160)
+Frame.Active = true
+Frame.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = Frame
+
+UIStroke.Thickness = 2
+UIStroke.Color = Color3.fromRGB(255, 255, 255)
+UIStroke.Parent = Frame
+
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Parent = Frame
+TitleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+TitleLabel.Position = UDim2.new(0.5, -110, 0.05, -10)
+TitleLabel.Size = UDim2.new(0, 220, 0, 30)
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Text = "Autoparry"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 18
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 10)
+titleCorner.Parent = TitleLabel
+
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = Frame
+ToggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ToggleButton.Position = UDim2.new(0.5, -50, 0.4, -10)
+ToggleButton.Size = UDim2.new(0, 100, 0, 30)
+ToggleButton.Font = Enum.Font.SourceSans
+ToggleButton.Text = "Toggle Autoparry"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 10)
+buttonCorner.Parent = ToggleButton
+
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Parent = Frame
+StatusLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+StatusLabel.Position = UDim2.new(0.5, -50, 0.2, -10)
+StatusLabel.Size = UDim2.new(0, 100, 0, 30)
+StatusLabel.Font = Enum.Font.SourceSans
+StatusLabel.Text = "Status: Off"
+StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.TextSize = 14
+
+local labelCorner = Instance.new("UICorner")
+labelCorner.CornerRadius = UDim.new(0, 10)
+labelCorner.Parent = StatusLabel
+
+KeybindButton.Name = "KeybindButton"
+KeybindButton.Parent = Frame
+KeybindButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+KeybindButton.Position = UDim2.new(0.5, -50, 0.7, -10)
+KeybindButton.Size = UDim2.new(0, 100, 0, 30)
+KeybindButton.Font = Enum.Font.SourceSans
+KeybindButton.Text = "Set Keybind"
+KeybindButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeybindButton.TextSize = 14
+
+local keybindCorner = Instance.new("UICorner")
+keybindCorner.CornerRadius = UDim.new(0, 10)
+keybindCorner.Parent = KeybindButton
+
+local currentKeybind = nil
+
+local function updateStatus()
+    if getgenv().autoparry then
+        StatusLabel.Text = "Status: On"
+    else
+        StatusLabel.Text = "Status: Off"
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    getgenv().autoparry = not getgenv().autoparry
+    updateStatus()
+end)
+
+KeybindButton.MouseButton1Click:Connect(function()
+    KeybindButton.Text = "Press a Key"
+    local connection
+    connection = UserInputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            currentKeybind = input.KeyCode
+            KeybindButton.Text = "Keybind: " .. input.KeyCode.Name
+            connection:Disconnect()
+        end
+    end)
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and currentKeybind and input.KeyCode == currentKeybind then
+        getgenv().autoparry = not getgenv().autoparry
+        updateStatus()
+    end
+end)
+
+updateStatus()
+
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        update(input)
+    end
+end)
+]]
+
+return guiScript
